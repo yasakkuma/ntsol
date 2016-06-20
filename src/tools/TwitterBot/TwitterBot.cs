@@ -22,6 +22,22 @@ namespace ntsol.Tools.TwitterBot
         private Tokens token;
 
         /// <summary>
+        /// ランダム辞書ファイル。
+        /// </summary>
+        private string randomDicFile = string.Empty;
+
+        private string replyDicFile = string.Empty;
+
+        /// <summary>
+        /// ボット名称
+        /// </summary>
+        public string BotName
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// コンシューマキーを取得・設定する。
         /// </summary>
         public string ConsumerKey
@@ -58,37 +74,38 @@ namespace ntsol.Tools.TwitterBot
         }
 
         /// <summary>
-        /// ランダム辞書ファイルパスを取得・設定する。
-        /// </summary>
-        public string RandomDicFile
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
         /// TwitterBotクラスのコンストラクタ。
         /// </summary>
         /// <remarks>Botのメンバを初期化する。</remarks>
         public TwitterBot()
         {
+            BotName = string.Empty;
             ConsumerKey = string.Empty;
             ConsumerSecret = string.Empty;
             AccessToken = string.Empty;
             AccessTokenSecret = string.Empty;
-            RandomDicFile = string.Empty;
 
         }
 
         /// <summary>
-        /// トークンを生成する。
+        /// Botの初期化処理を行う。
         /// </summary>
-        /// <remarks>
-        /// <para>コンシューマキー、コンシューマシークレット、</para>
-        /// <para>アクセストークン、アクセストークンシークレット設定後呼び出す。</para>
-        /// </remarks>
-        public void CreateToken()
+        /// <remarks>Botのプロパティの設定を行い、トークンを作成する。</remarks>
+        /// <exception cref="InvalidOperationException">トークンの作成に必要な情報が未設定の場合。</exception>
+        public void Initialize(string botName, string consumerKey,
+            string consumerSecret, string accessToken, string accessTokenSecret)
         {
+            // Botの初期化を行う。
+            BotName = botName;
+            ConsumerKey = consumerKey;
+            ConsumerSecret = consumerSecret;
+            AccessToken = accessToken;
+            AccessTokenSecret = accessTokenSecret;
+
+            // 辞書ファイルのファイル名を設定
+            randomDicFile = "Random" + BotName + "Dic.txt";
+            replyDicFile = "Reply" + BotName + "Dic.txt";
+
             // トークン生成
             token = Tokens.Create(this.ConsumerKey,
                 this.ConsumerSecret,
@@ -126,13 +143,13 @@ namespace ntsol.Tools.TwitterBot
             List<string> randomPostList = new List<string>();
 
             // ファイルの存在チェック
-            if (!File.Exists(RandomDicFile))
+            if (!File.Exists(randomDicFile))
             {
                 throw new FileNotFoundException(
-                    string.Format("ファイル\"{0}\"が見つかりません。", RandomDicFile));
+                    string.Format("ファイル\"{0}\"が見つかりません。", randomDicFile));
             }
 
-            using (StreamReader reader = new StreamReader(RandomDicFile))
+            using (StreamReader reader = new StreamReader(randomDicFile))
             {
                 string readLine;
                 
@@ -153,9 +170,40 @@ namespace ntsol.Tools.TwitterBot
             Post(randomPostList[random.Next(randomPostList.Count)]);
         }
 
+        /// <summary>
+        /// 特定のリプライに対して返信する。
+        /// </summary>
         public void ReplyPost()
         {
 
+        }
+
+        /// <summary>
+        /// 特定のツイートに対してリプライする。
+        /// </summary>
+        public void TLReplyPost()
+        {
+            List<Status> statusList = new List<Status>();
+            // タイムラインを取得
+            foreach(Status status in token.Statuses.HomeTimeline(count => 100))
+            {
+                if(status.User.ScreenName != token.ScreenName)
+                {
+                    statusList.Add(status);
+                    Console.WriteLine(status.User.ScreenName + ":" +status.Text);
+                }
+            }
+            //token. = "Update";
+            token.Account.UpdateProfile("testName");
+        }
+
+        /// <summary>
+        /// アカウントの表示名を変更する。
+        /// </summary>
+        /// <param name="newName">新しい表示名</param>
+        public void UpdateName(string newName)
+        {
+            token.Account.UpdateProfile(newName);
         }
     }
 }

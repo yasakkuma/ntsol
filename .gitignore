@@ -1,4 +1,12 @@
 #git無視一覧
 *.suo
 
-/obj/
+*.cache
+
+/obj
+
+/testdll
+
+
+
+
