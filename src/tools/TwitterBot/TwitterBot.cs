@@ -118,7 +118,7 @@ namespace ntsol.Tools.TwitterBotLib
         }
 
         /// <summary>
-        /// Botの初期化処理を行う。
+        /// Botの生成処理を行う。
         /// </summary>
         /// <param name="botName">Bot名称</param>
         /// <param name="consumerKey">コンシューマキー</param>
@@ -127,27 +127,31 @@ namespace ntsol.Tools.TwitterBotLib
         /// <param name="accessTokenSecret">アクセストークンシークレット</param>
         /// <remarks>Botのプロパティの設定を行い、トークンを作成する。</remarks>
         /// <exception cref="InvalidOperationException">トークンの作成に必要な情報が未設定の場合。</exception>
-        public void Initialize(string botName, string consumerKey,
+        public static TwitterBot CreateTwitterBot(string botName, string consumerKey,
             string consumerSecret, string accessToken, string accessTokenSecret)
         {
+            TwitterBot bot = new TwitterBot();
+
             // Botの初期化を行う。
-            BotName = botName;
-            ConsumerKey = consumerKey;
-            ConsumerSecret = consumerSecret;
-            AccessToken = accessToken;
-            AccessTokenSecret = accessTokenSecret;
+            bot.BotName = botName;
+            bot.ConsumerKey = consumerKey;
+            bot.ConsumerSecret = consumerSecret;
+            bot.AccessToken = accessToken;
+            bot.AccessTokenSecret = accessTokenSecret;
 
             // 辞書ファイルのファイル名を設定
-            randomDicFile = settingDir + "Random" + BotName + "Dic.txt";
-            replyDicFile = settingDir + "Reply" + BotName + "Dic.xml";
-            replySettingFile = settingDir + "Reply" + BotName;
-            tlReplySettingFile = settingDir + "TLReply" + BotName;
+            bot.randomDicFile = settingDir + "Random" + bot.BotName + "Dic.txt";
+            bot.replyDicFile = settingDir + "Reply" + bot.BotName + "Dic.xml";
+            bot.replySettingFile = settingDir + "Reply" + bot.BotName;
+            bot.tlReplySettingFile = settingDir + "TLReply" + bot.BotName;
 
             // トークン生成
-            token = Tokens.Create(this.ConsumerKey,
-                this.ConsumerSecret,
-                this.AccessToken,
-                this.AccessTokenSecret);
+            bot.token = Tokens.Create(bot.ConsumerKey,
+                bot.ConsumerSecret,
+                bot.AccessToken,
+                bot.AccessTokenSecret);
+
+            return bot;
         }
 
         /// <summary>
