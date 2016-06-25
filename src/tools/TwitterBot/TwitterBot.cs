@@ -163,22 +163,9 @@ namespace ntsol.Tools.TwitterBotLib
                 throw new InvalidOperationException("トークンが生成されていません。\n" + 
                     "CreateToken()を使用してトークンを生成してください。");
             }
-
-            // ツイートする。(失敗してもリトライする。)
-            for (int i = 0; i < retryNum; i++)
-            {
-                try
-                {
-                    // ツイート
-                    token.Statuses.Update(new { status = tweet });
-                    return;
-
-                }
-                catch (TwitterException)
-                {
-                    // 重複の場合は握りつぶす。
-                }
-            }
+            
+            // ツイート
+            token.Statuses.Update(new { status = tweet });
         }
 
         /// <summary>
@@ -186,23 +173,17 @@ namespace ntsol.Tools.TwitterBotLib
         /// </summary>
         /// <param name="tweet">リプライするツイート。</param>
         /// <param name="replyId">返信するリプライID</param>
+        /// <exception cref="TwitterException">重複ツイートの場合</exception>
         private void ReplyPost(string tweet, long replyId)
         {
-            // リプライする。(失敗してもリトライする。)
-            for (int i = 0; i < retryNum; i++)
+            try
             {
-                try
-                {
-                    // ツイート
-                    token.Statuses.Update(tweet, replyId);
-                    lastReplyId = replyId;
-                    return;
-
-                }
-                catch (TwitterException)
-                {
-                    // 重複の場合は握りつぶす。
-                }
+                // ツイート
+                token.Statuses.Update(tweet, replyId);
+                lastReplyId = replyId;
+            } catch(TwitterException)
+            {
+                // 重複ツイートは握り潰す。
             }
         }
 
@@ -241,7 +222,20 @@ namespace ntsol.Tools.TwitterBotLib
 
             // 乱数値を生成し、ツイート
             Random random = new Random();
-            Post(randomPostList[random.Next(randomPostList.Count)]);
+
+            // 重複ツイートの場合はリトライする。
+            for (int i = 0; i < retryNum; i++)
+            {
+                try
+                {
+                    Post(randomPostList[random.Next(randomPostList.Count)]);
+                    return;
+                }
+                catch (TwitterException)
+                {
+                    // 重複ツイートは握り潰す。
+                }
+            }
         }
 
         /// <summary>

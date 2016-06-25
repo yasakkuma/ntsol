@@ -16,6 +16,10 @@ namespace ntsol.Tools.TwitterBotLib
     public class ReplyTableData
     {
         [XmlElement("ReplyMessagePair")]
-        public List<ReplyMessageData> ReplyMessageDataList { get; set; }
+        public List<ReplyMessageData> ReplyMessageDataList
+        {
+            get;
+            set;
+        }
     }
 }
