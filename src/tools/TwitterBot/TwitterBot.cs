@@ -302,18 +302,8 @@ namespace ntsol.Tools.TwitterBotLib
                 }
             }
 
-            // まとめてリプライする。
-            while (replyStack.Count() > 0)
-            {
-                ReplyTweetData replyTweet = replyStack.Pop();
-                ReplyPost(replyTweet.ReplyMessage, replyTweet.ReplyId);
-            }
-
-            // 最後のリプライを記録する。
-            using (StreamWriter writer = new StreamWriter(replySettingFile, false))
-            {
-                writer.WriteLine(lastReplyId);
-            }
+            // リプライを実施し、リプライIDを記録する。
+            ReplyPostFinalize(replyStack, replySettingFile);
         }
 
         /// <summary>
@@ -388,18 +378,8 @@ namespace ntsol.Tools.TwitterBotLib
                 }
             }
 
-            // まとめてリプライする。
-            while (tlReplyStack.Count() > 0)
-            {
-                ReplyTweetData replyTweet = tlReplyStack.Pop();
-                ReplyPost(replyTweet.ReplyMessage, replyTweet.ReplyId);
-            }
-
-            // 最後のリプライを記録する。
-            using (StreamWriter writer = new StreamWriter(tlReplySettingFile, false))
-            {
-                writer.WriteLine(lastReplyId);
-            }
+            // リプライを実施し、リプライIDを記録する。
+            ReplyPostFinalize(tlReplyStack, tlReplySettingFile);
         }
 
         /// <summary>
@@ -409,6 +389,27 @@ namespace ntsol.Tools.TwitterBotLib
         public void UpdateName(string newName)
         {
             token.Account.UpdateProfile(newName);
+        }
+
+        /// <summary>
+        /// リプライを実施し、リプライIDを記録する。
+        /// </summary>
+        /// <param name="replyStack">リプライのスタック</param>
+        /// <param name="filepath">リプライIDを記録するファイルパス</param>
+        private void ReplyPostFinalize (Stack<ReplyTweetData> replyStack, string filepath)
+        {
+            // まとめてリプライする。
+            while(replyStack.Count > 0)
+            {
+                ReplyTweetData replyTweet = replyStack.Pop();
+                ReplyPost(replyTweet.ReplyMessage, replyTweet.ReplyId);
+            }
+
+            // 最後のリプライを記録する。
+            using (StreamWriter writer = new StreamWriter(filepath, false))
+            {
+                writer.WriteLine(lastReplyId);
+            }
         }
     }
 }
