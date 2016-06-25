@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using ntsol.Tools.XmlReader;
 using CoreTweet;
 
 /* TwitterBotパッケージ名前空間 */
@@ -26,7 +27,20 @@ namespace ntsol.Tools.TwitterBot
         /// </summary>
         private string randomDicFile = string.Empty;
 
+        /// <summary>
+        /// リプライ辞書ファイル
+        /// </summary>
         private string replyDicFile = string.Empty;
+
+        /// <summary>
+        /// TLリプライ辞書ファイル。
+        /// </summary>
+        private string TLReplyDicFile = string.Empty;
+
+        /// <summary>
+        /// 設定ファイル格納ディレクトリ
+        /// </summary>
+        private const string settingDir = @"Setting\";
 
         /// <summary>
         /// ボット名称
@@ -90,6 +104,11 @@ namespace ntsol.Tools.TwitterBot
         /// <summary>
         /// Botの初期化処理を行う。
         /// </summary>
+        /// <param name="botName">Bot名称</param>
+        /// <param name="consumerKey">コンシューマキー</param>
+        /// <param name="consumerSecret">コンシューマシークレット</param>
+        /// <param name="accessToken">アクセストークン</param>
+        /// <param name="accessTokenSecret">アクセストークンシークレット</param>
         /// <remarks>Botのプロパティの設定を行い、トークンを作成する。</remarks>
         /// <exception cref="InvalidOperationException">トークンの作成に必要な情報が未設定の場合。</exception>
         public void Initialize(string botName, string consumerKey,
@@ -103,8 +122,9 @@ namespace ntsol.Tools.TwitterBot
             AccessTokenSecret = accessTokenSecret;
 
             // 辞書ファイルのファイル名を設定
-            randomDicFile = "Random" + BotName + "Dic.txt";
-            replyDicFile = "Reply" + BotName + "Dic.txt";
+            randomDicFile = settingDir + "Random" + BotName + "Dic.txt";
+            replyDicFile = settingDir + "Reply" + BotName + "Dic.xml";
+            TLReplyDicFile = settingDir + "TLReply" + BotName + "Dic.xml";
 
             // トークン生成
             token = Tokens.Create(this.ConsumerKey,
@@ -175,7 +195,34 @@ namespace ntsol.Tools.TwitterBot
         /// </summary>
         public void ReplyPost()
         {
+            Dictionary<string, string> replyTriggerDic = new Dictionary<string, string>();
 
+            try
+            {
+                // 辞書ファイルからリプライトリガーメッセージとリプライメッセージを取り出す。
+                ReplyTableData xmlData = new ReplyTableData();
+                XmlReader.XmlReader.GetInstance.Read(replyDicFile, ref xmlData);
+
+                foreach (ReplyMessageData message in xmlData.ReplyMessageDataList)
+                {
+                    replyTriggerDic.Add(message.ReplyTrigger, message.ReplyMessage);
+                }
+            } catch
+            {
+                throw new InvalidOperationException("リプライ辞書ファイルに重複トリガーが設定されています。");
+            }
+
+
+            // タイムラインを取得
+            foreach (Status status in token.Statuses.MentionsTimeline(count => 50))
+            {
+                // メンションの宛先部分を削除して比較
+                string compStr = status.Text.Substring(status.Text.IndexOf(" ") + 1);
+                if(replyTriggerDic.ContainsKey(compStr))
+                {
+                    token.Statuses.Update("@" + status.User.ScreenName + " " + replyTriggerDic[compStr],status.Id);
+                }
+            }
         }
 
         /// <summary>
@@ -187,7 +234,7 @@ namespace ntsol.Tools.TwitterBot
             // タイムラインを取得
             foreach(Status status in token.Statuses.HomeTimeline(count => 100))
             {
-                if(status.User.ScreenName != token.ScreenName)
+                if(status.User.ScreenName != token.Account.ToString())
                 {
                     statusList.Add(status);
                     Console.WriteLine(status.User.ScreenName + ":" +status.Text);
