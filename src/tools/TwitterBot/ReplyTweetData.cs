@@ -1,34 +1,33 @@
-﻿/* ReplyMessageDataクラスファイル */
+﻿/* ReplyTweetDataクラスファイル */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml.Serialization;
 
 /* TwitterBotLibパッケージ名前空間 */
 namespace ntsol.Tools.TwitterBotLib
 {
     /// <summary>
-    /// リプライに対する返信データクラス
+    /// リプライツイートデータ
     /// </summary>
-    public class ReplyMessageData
+    /// <remarks>リプライするメッセージとどのリプライに対する返信かを保持するクラス</remarks>
+    public class ReplyTweetData
     {
         /// <summary>
-        /// リプライトリガー
+        /// リプライメッセージ
         /// </summary>
-        [XmlAttribute]
-        public string ReplyTrigger
+        public string ReplyMessage
         {
             get;
             set;
         }
 
         /// <summary>
-        /// 返信用メッセージ
+        /// リプライID
         /// </summary>
-        [XmlElement]
-        public string ReplyMessage
+        public long ReplyId
         {
             get;
             set;

@@ -7,8 +7,8 @@
     <ProjectGuid>{97F57759-7DA9-4CDC-BD0B-C83EC3C7EC7A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>TwitterBot</RootNamespace>
-    <AssemblyName>TwitterBot</AssemblyName>
+    <RootNamespace>ntsol.Tools.TwitterBotLib</RootNamespace>
+    <AssemblyName>TwitterBotLib</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -48,10 +48,11 @@
     <Reference Include="System.Xml" />
     <Reference Include="XmlReader, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\bin\tools\Release\bin\XmlReader.dll</HintPath>
+      <HintPath>..\..\..\bin\tools\Release\lib\XmlReader.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ReplyTweetData.cs" />
     <Compile Include="TwitterBot.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReplyTableData.cs" />

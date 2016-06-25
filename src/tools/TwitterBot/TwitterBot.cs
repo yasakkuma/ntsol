@@ -9,14 +9,24 @@ using System.IO;
 using ntsol.Tools.XmlReader;
 using CoreTweet;
 
-/* TwitterBotパッケージ名前空間 */
-namespace ntsol.Tools.TwitterBot
+/* TwitterBotLibパッケージ名前空間 */
+namespace ntsol.Tools.TwitterBotLib
 {
     /// <summary>
     /// TwitterBotクラス
     /// </summary>
     public class TwitterBot
     {
+        /// <summary>
+        /// リトライ回数
+        /// </summary>
+        private int retryNum = 10;
+
+        /// <summary>
+        /// 最後のリプライID
+        /// </summary>
+        private long lastReplyId = 0;
+
         /// <summary>
         /// Twitterアカウント認証用トークン。
         /// </summary>
@@ -31,6 +41,11 @@ namespace ntsol.Tools.TwitterBot
         /// リプライ辞書ファイル
         /// </summary>
         private string replyDicFile = string.Empty;
+
+        /// <summary>
+        /// リプライ設定ファイル
+        /// </summary>
+        private string replySettingFile = string.Empty;
 
         /// <summary>
         /// TLリプライ辞書ファイル。
@@ -124,6 +139,7 @@ namespace ntsol.Tools.TwitterBot
             // 辞書ファイルのファイル名を設定
             randomDicFile = settingDir + "Random" + BotName + "Dic.txt";
             replyDicFile = settingDir + "Reply" + BotName + "Dic.xml";
+            replySettingFile = settingDir + "Reply" + BotName;
             TLReplyDicFile = settingDir + "TLReply" + BotName + "Dic.xml";
 
             // トークン生成
@@ -148,8 +164,46 @@ namespace ntsol.Tools.TwitterBot
                     "CreateToken()を使用してトークンを生成してください。");
             }
 
-            // ツイート
-            token.Statuses.Update(new {status = tweet});
+            // ツイートする。(失敗してもリトライする。)
+            for (int i = 0; i < retryNum; i++)
+            {
+                try
+                {
+                    // ツイート
+                    token.Statuses.Update(new { status = tweet });
+                    return;
+
+                }
+                catch (TwitterException)
+                {
+                    // 重複の場合は握りつぶす。
+                }
+            }
+        }
+
+        /// <summary>
+        /// リプライをポストする。
+        /// </summary>
+        /// <param name="tweet">リプライするツイート。</param>
+        /// <param name="replyId">返信するリプライID</param>
+        private void ReplyPost(string tweet, long replyId)
+        {
+            // リプライする。(失敗してもリトライする。)
+            for (int i = 0; i < retryNum; i++)
+            {
+                try
+                {
+                    // ツイート
+                    token.Statuses.Update(tweet, replyId);
+                    lastReplyId = replyId;
+                    return;
+
+                }
+                catch (TwitterException)
+                {
+                    // 重複の場合は握りつぶす。
+                }
+            }
         }
 
         /// <summary>
@@ -157,7 +211,7 @@ namespace ntsol.Tools.TwitterBot
         /// </summary>
         /// <remarks>辞書ファイルから取得した文字列をランダムにツイートする。</remarks>
         /// <exception cref="FileNotFoundException">定義したファイルが存在しない場合。</exception>
-        /// <exception cref="ntsol.Tools.TwitterBot.Post"></exception>
+        /// <exception cref="ntsol.Tools.TwitterBotLib.Post"></exception>
         public void RandomPost()
         {
             List<string> randomPostList = new List<string>();
@@ -196,6 +250,7 @@ namespace ntsol.Tools.TwitterBot
         public void ReplyPost()
         {
             Dictionary<string, string> replyTriggerDic = new Dictionary<string, string>();
+            Stack<ReplyTweetData> replyStack = new Stack<ReplyTweetData>();
 
             try
             {
@@ -212,16 +267,57 @@ namespace ntsol.Tools.TwitterBot
                 throw new InvalidOperationException("リプライ辞書ファイルに重複トリガーが設定されています。");
             }
 
+            // ファイルの存在チェック
+            if (!File.Exists(replySettingFile))
+            {
+                using (StreamWriter writer = new StreamWriter(File.Create(replySettingFile)))
+                {
+                    writer.WriteLine("0");
+                }
+            }
 
-            // タイムラインを取得
+            //　最後のリプライIDを取得
+            using (StreamReader reader = new StreamReader(replySettingFile))
+            {
+                if (!Int64.TryParse(reader.ReadLine(), out lastReplyId))
+                {
+                    throw new InvalidOperationException("設定ファイル:" + replySettingFile + "が不正です。");
+                }
+            }
+
+            // メンションを取得
             foreach (Status status in token.Statuses.MentionsTimeline(count => 50))
             {
+                // リプライ済みのツイートは読み飛ばす。
+                if (status.Id <= lastReplyId)
+                {
+                    continue;
+                }
+
                 // メンションの宛先部分を削除して比較
                 string compStr = status.Text.Substring(status.Text.IndexOf(" ") + 1);
                 if(replyTriggerDic.ContainsKey(compStr))
                 {
-                    token.Statuses.Update("@" + status.User.ScreenName + " " + replyTriggerDic[compStr],status.Id);
+                    // リプライデータを生成
+                    // (古いツイートから取得できない為、一時的にスタックにためる。)
+                    ReplyTweetData replyTweet = new ReplyTweetData();
+                    replyTweet.ReplyMessage = "@" + status.User.ScreenName + " " + replyTriggerDic[compStr];
+                    replyTweet.ReplyId = status.Id;
+                    replyStack.Push(replyTweet);
                 }
+            }
+
+            // まとめてリプライする。
+            while (replyStack.Count() > 0)
+            {
+                ReplyTweetData replyTweet = replyStack.Pop();
+                ReplyPost(replyTweet.ReplyMessage, replyTweet.ReplyId);
+            }
+
+            // 最後のリプライを記録する。
+            using (StreamWriter writer = new StreamWriter(replySettingFile, false))
+            {
+                writer.WriteLine(lastReplyId);
             }
         }
 
