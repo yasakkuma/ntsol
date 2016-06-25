@@ -52,6 +52,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="TLReplyMessageData.cs" />
     <Compile Include="ReplyTweetData.cs" />
     <Compile Include="TwitterBot.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -1,4 +1,4 @@
-﻿/* ReplyTableDataクラスファイル */
+﻿/* TLReplyMessageDataクラスファイル */
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,26 +10,25 @@ using System.Xml.Serialization;
 namespace ntsol.Tools.TwitterBotLib
 {
     /// <summary>
-    /// リプライに対する返信の対応表データクラス。
+    /// タイムラインに対する返信データクラス
     /// </summary>
-    [XmlRoot("ReplyTable")]
-    public class ReplyTableData
+    public class TLReplyMessageData
     {
         /// <summary>
-        /// リプライメッセージリスト
+        /// タイムラインリプライトリガー
         /// </summary>
-        [XmlElement("ReplyMessagePair")]
-        public List<ReplyMessageData> ReplyMessageDataList
+        [XmlAttribute]
+        public string TLReplyTrigger
         {
             get;
             set;
         }
 
         /// <summary>
-        /// TLリプライメッセージリスト
+        /// タイムライン返信用メッセージ
         /// </summary>
-        [XmlElement("TLReplyMessagePair")]
-        public List<TLReplyMessageData> TLReplyMessageDataList
+        [XmlElement]
+        public string TLReplyMessage
         {
             get;
             set;

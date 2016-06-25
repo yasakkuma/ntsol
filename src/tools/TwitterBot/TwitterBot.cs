@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using ntsol.Tools.XmlReader;
+using System.Text.RegularExpressions;
 using CoreTweet;
 
 /* TwitterBotLibパッケージ名前空間 */
@@ -20,7 +21,7 @@ namespace ntsol.Tools.TwitterBotLib
         /// <summary>
         /// リトライ回数
         /// </summary>
-        private int retryNum = 10;
+        private const short retryNum = 10;
 
         /// <summary>
         /// 最後のリプライID
@@ -38,19 +39,19 @@ namespace ntsol.Tools.TwitterBotLib
         private string randomDicFile = string.Empty;
 
         /// <summary>
-        /// リプライ辞書ファイル
+        /// リプライ辞書ファイル。
         /// </summary>
         private string replyDicFile = string.Empty;
 
         /// <summary>
-        /// リプライ設定ファイル
+        /// リプライ設定ファイル。
         /// </summary>
         private string replySettingFile = string.Empty;
 
         /// <summary>
-        /// TLリプライ辞書ファイル。
+        /// TLリプライ設定ファイル。
         /// </summary>
-        private string TLReplyDicFile = string.Empty;
+        private string tlReplySettingFile = string.Empty;
 
         /// <summary>
         /// 設定ファイル格納ディレクトリ
@@ -140,7 +141,7 @@ namespace ntsol.Tools.TwitterBotLib
             randomDicFile = settingDir + "Random" + BotName + "Dic.txt";
             replyDicFile = settingDir + "Reply" + BotName + "Dic.xml";
             replySettingFile = settingDir + "Reply" + BotName;
-            TLReplyDicFile = settingDir + "TLReply" + BotName + "Dic.xml";
+            tlReplySettingFile = settingDir + "TLReply" + BotName;
 
             // トークン生成
             token = Tokens.Create(this.ConsumerKey,
@@ -280,7 +281,7 @@ namespace ntsol.Tools.TwitterBotLib
             }
 
             // メンションを取得
-            foreach (Status status in token.Statuses.MentionsTimeline(count => 50))
+            foreach (Status status in token.Statuses.MentionsTimeline(count => 50, trim_user => false))
             {
                 // リプライ済みのツイートは読み飛ばす。
                 if (status.Id <= lastReplyId)
@@ -320,18 +321,85 @@ namespace ntsol.Tools.TwitterBotLib
         /// </summary>
         public void TLReplyPost()
         {
-            List<Status> statusList = new List<Status>();
-            // タイムラインを取得
-            foreach(Status status in token.Statuses.HomeTimeline(count => 100))
+            Dictionary<string, string> tlReplyTriggerDic = new Dictionary<string, string>();
+            Stack<ReplyTweetData> tlReplyStack = new Stack<ReplyTweetData>();
+
+            try
             {
-                if(status.User.ScreenName != token.Account.ToString())
+                // 辞書ファイルからTLリプライトリガーメッセージとTLリプライメッセージを取り出す。
+                ReplyTableData xmlData = new ReplyTableData();
+                XmlReader.XmlReader.GetInstance.Read(replyDicFile, ref xmlData);
+
+                foreach (TLReplyMessageData message in xmlData.TLReplyMessageDataList)
                 {
-                    statusList.Add(status);
-                    Console.WriteLine(status.User.ScreenName + ":" +status.Text);
+                    tlReplyTriggerDic.Add(message.TLReplyTrigger, message.TLReplyMessage);
                 }
             }
-            //token. = "Update";
-            token.Account.UpdateProfile("testName");
+            catch
+            {
+                throw new InvalidOperationException("リプライ辞書ファイルに重複トリガーが設定されています。");
+            }
+
+            // ファイルの存在チェック
+            if (!File.Exists(tlReplySettingFile))
+            {
+                using (StreamWriter writer = new StreamWriter(File.Create(tlReplySettingFile)))
+                {
+                    writer.WriteLine("0");
+                }
+            }
+
+            //　最後のリプライIDを取得
+            using (StreamReader reader = new StreamReader(tlReplySettingFile))
+            {
+                if (!Int64.TryParse(reader.ReadLine(), out lastReplyId))
+                {
+                    throw new InvalidOperationException("設定ファイル:" + replySettingFile + "が不正です。");
+                }
+            }
+
+            List<string> triggerArray = tlReplyTriggerDic.Keys.ToList();
+            List<string> messageArray = tlReplyTriggerDic.Values.ToList();
+
+            // タイムラインを取得
+            foreach (Status status in token.Statuses.HomeTimeline(count => 100, exclude_replies => true))
+            {
+                // リプライ済みのツイートは読み飛ばす。
+                if (status.Id <= lastReplyId)
+                {
+                    continue;
+                }
+                
+                int index = 0;
+                foreach (string trigger in triggerArray)
+                {
+                    // トリガーにマッチするデータがあるか検索
+                    if (Regex.Match(@status.Text, @trigger, RegexOptions.None).Success)
+                    {
+                        // リプライデータを生成
+                        // (古いツイートから取得できない為、一時的にスタックにためる。)
+                        ReplyTweetData replyTweet = new ReplyTweetData();
+                        replyTweet.ReplyMessage = "@" + status.User.ScreenName + " " + messageArray[index];
+                        replyTweet.ReplyId = status.Id;
+                        tlReplyStack.Push(replyTweet);
+                        break;
+                    }
+                    index++;
+                }
+            }
+
+            // まとめてリプライする。
+            while (tlReplyStack.Count() > 0)
+            {
+                ReplyTweetData replyTweet = tlReplyStack.Pop();
+                ReplyPost(replyTweet.ReplyMessage, replyTweet.ReplyId);
+            }
+
+            // 最後のリプライを記録する。
+            using (StreamWriter writer = new StreamWriter(tlReplySettingFile, false))
+            {
+                writer.WriteLine(lastReplyId);
+            }
         }
 
         /// <summary>
