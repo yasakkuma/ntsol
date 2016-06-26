@@ -1,12 +1,8 @@
 #git無視一覧
 *.suo
-
 *.cache
-
 /obj
-
 /testdll
-
-
+/Setting
 
 
