@@ -125,8 +125,9 @@ namespace ntsol.Tools.TwitterBotLib
         /// <param name="consumerSecret">コンシューマシークレット</param>
         /// <param name="accessToken">アクセストークン</param>
         /// <param name="accessTokenSecret">アクセストークンシークレット</param>
+        /// <returns>作成したTwitterBotインスタンス</returns>
         /// <remarks>Botのプロパティの設定を行い、トークンを作成する。</remarks>
-        /// <exception cref="InvalidOperationException">トークンの作成に必要な情報が未設定の場合。</exception>
+        /// <exception cref="InvalidOperationException">トークンの作成に必要な情報に誤りがある場合。</exception>
         public static TwitterBot CreateTwitterBot(string botName, string consumerKey,
             string consumerSecret, string accessToken, string accessTokenSecret)
         {
@@ -151,6 +152,16 @@ namespace ntsol.Tools.TwitterBotLib
                 bot.AccessToken,
                 bot.AccessTokenSecret);
 
+            try
+            {
+                // 正常にアクセスできるか確認
+                bot.token.Statuses.HomeTimeline(count => 0);
+            } catch
+            {
+                throw new InvalidOperationException("トークンの生成に失敗しました。\n" +
+                    "ConsumerKey,ConsumerSecret,AccessToken,AccessTokenSecretが正しいか確認してください。");
+            }
+
             return bot;
         }
 
@@ -158,17 +169,9 @@ namespace ntsol.Tools.TwitterBotLib
         /// パラメータに設定した内容でツイートする。
         /// </summary>
         /// <param name="tweet">ポストする文字列</param>
-        /// <exception cref="InvalidOperationException">トークンが未作成の場合</exception>
         /// <exception cref="TwitterException">ツイートが重複した場合</exception>
         public void Post(string tweet)
-        {
-            // トークンの作成状態をチェック
-            if (token == null)
-            {
-                throw new InvalidOperationException("トークンが生成されていません。\n" + 
-                    "CreateToken()を使用してトークンを生成してください。");
-            }
-            
+        {   
             // ツイート
             token.Statuses.Update(new { status = tweet });
         }
@@ -178,7 +181,6 @@ namespace ntsol.Tools.TwitterBotLib
         /// </summary>
         /// <param name="tweet">リプライするツイート。</param>
         /// <param name="replyId">返信するリプライID</param>
-        /// <exception cref="TwitterException">重複ツイートの場合</exception>
         private void ReplyPost(string tweet, long replyId)
         {
             try
@@ -246,6 +248,8 @@ namespace ntsol.Tools.TwitterBotLib
         /// <summary>
         /// 特定のリプライに対して返信する。
         /// </summary>
+        /// <exception cref="InvalidOperationException">辞書ファイルに重複トリガーが設定されていた場合</exception>
+        /// <exception cref="TwitterException">トークンが存在しない場合</exception>
         public void ReplyPost()
         {
             Dictionary<string, string> replyTriggerDic = new Dictionary<string, string>();
@@ -313,6 +317,8 @@ namespace ntsol.Tools.TwitterBotLib
         /// <summary>
         /// 特定のツイートに対してリプライする。
         /// </summary>
+        /// /// <exception cref="InvalidOperationException">辞書ファイルに重複トリガーが設定されていた場合</exception>
+        /// <exception cref="TwitterException">トークンが存在しない場合</exception>
         public void TLReplyPost()
         {
             Dictionary<string, string> tlReplyTriggerDic = new Dictionary<string, string>();
@@ -384,6 +390,46 @@ namespace ntsol.Tools.TwitterBotLib
 
             // リプライを実施し、リプライIDを記録する。
             ReplyPostFinalize(tlReplyStack, tlReplySettingFile);
+        }
+
+        /// <summary>
+        /// フォローバックを実施する。
+        /// </summary>
+        /// <remarks>
+        /// <para>フォロワーにフォローしていないユーザーがいる場合はフォローバックを行う。</para>
+        /// <para>既にリムーブされていてフォローしているユーザーにはリムーブを行う。</para>
+        /// </remarks>
+        public void FollowedBack()
+        {
+            List<User> followedList = token.Friends.List().ToList();
+            List<User> followerList = token.Followers.List().ToList();
+            Dictionary<long?, User> followedDic = new Dictionary<long?, User>();
+            Dictionary<long?, User> followerDic = new Dictionary<long?, User>();
+
+            // フォロー一覧をディクショナリに追加
+            foreach (User user in followedList)
+            {
+                followedDic.Add(user.Id, user);
+            }
+
+            // フォローしていないフォロワーがいたばあいフォローする。
+            foreach (User user in followerList)
+            {
+                if(!followedDic.ContainsKey(user.Id))
+                {
+                    token.Friendships.Create(user_id => user.Id);
+                }
+                followerDic.Add(user.Id, user);
+            }
+
+            // リムーブされていた場合はこちらもリムーブする。
+            foreach (User user in followedList)
+            {
+                if(!followerDic.ContainsKey(user.Id))
+                {
+                    token.Friendships.Destroy(user_id => user.Id);
+                }
+            }
         }
 
         /// <summary>
