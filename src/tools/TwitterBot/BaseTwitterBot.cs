@@ -1,10 +1,8 @@
-﻿/* BaseTwitterBotインターフェースファイル */
+﻿/* BaseTwitterBot抽象クラスファイル */
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using CoreTweet;
 
 /* TwitterBotLibパッケージ名前空間 */
@@ -61,7 +59,7 @@ namespace ntsol.Tools.TwitterBotLib
         public string BotName
         {
             get;
-            set;
+            private set;
         }
 
         /// <summary>
@@ -70,7 +68,7 @@ namespace ntsol.Tools.TwitterBotLib
         public string ConsumerKey
         {
             get;
-            set;
+            private set;
         }
 
         /// <summary>
@@ -79,7 +77,7 @@ namespace ntsol.Tools.TwitterBotLib
         public string ConsumerSecret
         {
             get;
-            set;
+            private set;
         }
 
         /// <summary>
@@ -88,7 +86,7 @@ namespace ntsol.Tools.TwitterBotLib
         public string AccessToken
         {
             get;
-            set;
+            private set;
         }
 
         /// <summary>
@@ -97,20 +95,40 @@ namespace ntsol.Tools.TwitterBotLib
         public string AccessTokenSecret
         {
             get;
-            set;
+            private set;
+        }
+
+        /// <summary>
+        /// ランダムタイマーを取得・設定する。
+        /// </summary>
+        public int RandomTimer
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// リプライタイマーを取得・設定する。
+        /// </summary>
+        public int ReplyTimer
+        {
+            get;
+            private set;
         }
 
         /// <summary>
         /// コンストラクタ。
         /// </summary>
         /// <remarks>Botのメンバを初期化する。</remarks>
-        public BaseTwitterBot()
+        protected BaseTwitterBot()
         {
             BotName = string.Empty;
             ConsumerKey = string.Empty;
             ConsumerSecret = string.Empty;
             AccessToken = string.Empty;
             AccessTokenSecret = string.Empty;
+            RandomTimer = 0;
+            ReplyTimer = 0;
         }
 
         /// <summary>
@@ -121,11 +139,19 @@ namespace ntsol.Tools.TwitterBotLib
         /// <param name="consumerSecret">コンシューマシークレット</param>
         /// <param name="accessToken">アクセストークン</param>
         /// <param name="accessTokenSecret">アクセストークンシークレット</param>
+        /// <param name="randomTimer">ランダムタイマー</param>
+        /// <param name="replyTimer">リプライタイマー</param>
         /// <returns>作成したTwitterBotインスタンス</returns>
         /// <remarks>Botのプロパティの設定を行い、トークンを作成する。</remarks>
         /// <exception cref="InvalidOperationException">トークンの作成に必要な情報に誤りがある場合。</exception>
-        public static TwitterBot CreateTwitterBot(string botName, string consumerKey,
-            string consumerSecret, string accessToken, string accessTokenSecret)
+        public static TwitterBot CreateTwitterBot(
+            string botName,
+            string consumerKey,
+            string consumerSecret,
+            string accessToken,
+            string accessTokenSecret,
+            int randomTimer,
+            int replyTimer)
         {
             TwitterBot bot = new TwitterBot();
 
@@ -135,6 +161,8 @@ namespace ntsol.Tools.TwitterBotLib
             bot.ConsumerSecret = consumerSecret;
             bot.AccessToken = accessToken;
             bot.AccessTokenSecret = accessTokenSecret;
+            bot.RandomTimer = randomTimer;
+            bot.ReplyTimer = replyTimer;
 
             // 辞書ファイルのファイル名を設定
             bot.randomDicFile = settingDir + "Random" + bot.BotName + "Dic.txt";
