@@ -2,8 +2,8 @@
 
 using System.Xml.Serialization;
 
-/* TwitterBotMngパッケージ名前空間 */
-namespace ntsol.Tools.TwitterBotMng
+/* TwitterBotMngServiceパッケージ名前空間 */
+namespace ntsol.Tools.TwitterBotMngService
 {
     /// <summary>
     /// TwitterBot情報格納クラス

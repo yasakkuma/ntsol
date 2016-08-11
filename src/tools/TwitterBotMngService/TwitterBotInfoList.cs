@@ -3,8 +3,8 @@
 using System.Collections.Generic;
 using System.Xml.Serialization;
 
-/* TwitterBotMngパッケージ名前空間 */
-namespace ntsol.Tools.TwitterBotMng
+/* TwitterBotMngServiceパッケージ名前空間 */
+namespace ntsol.Tools.TwitterBotMngService
 {
     /// <summary>
     /// TwitterBot情報一覧格納クラス
