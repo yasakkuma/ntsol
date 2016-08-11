@@ -218,6 +218,10 @@ namespace ntsol.Tools.TwitterBotLib
         /// </summary>
         /// <param name="replyStack">リプライのスタック</param>
         /// <param name="filepath">リプライIDを記録するファイルパス</param>
+        /// <remarks>
+        /// <para>リプライを実施する。</para>
+        /// <para>同じリプライに反応しないようにリプライIDを記録する。</para>
+        /// </remarks>
         private void ReplyPostExecute(Stack<ReplyTweetData> replyStack, string filepath)
         {
             // まとめてリプライする。

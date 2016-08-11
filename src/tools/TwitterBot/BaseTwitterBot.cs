@@ -240,7 +240,7 @@ namespace ntsol.Tools.TwitterBotLib
                 followedDic.Add(user.Id, user);
             }
 
-            // フォローしていないフォロワーがいたばあいフォローする。
+            // フォローしていないフォロワーがいた場合フォローする。
             foreach (User user in followerList)
             {
                 if (!followedDic.ContainsKey(user.Id))
