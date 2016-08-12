@@ -14,24 +14,25 @@ namespace ntsol.Tools.TwitterBotMngService
     /// </summary>
     public partial class TwitterBotMng : ServiceBase
     {
+        #region メンバ変数
         /// <summary>
-        /// botのディクショナリ
+        /// bot一覧
         /// </summary>
-        Dictionary<string, TwitterBot> botDic;
-
-        /// <summary>
-        /// ランダムタイマーのディクショナリ
-        /// </summary>
-        Dictionary<string, Timer> randomTimerDic;
+        List<TwitterBot> botList;
 
         /// <summary>
-        /// リプライタイマーのディクショナリ
+        /// ランダムタイマー一覧
         /// </summary>
-        Dictionary<string, Timer> replyTimerDic;
+        List<Timer> randomTimerList;
 
-        // ポーリング間隔
-        private readonly TimeSpan pollingInterval = new TimeSpan(0, 0, 30);
+        /// <summary>
+        /// リプライタイマー一覧
+        /// </summary>
+        List<Timer> replyTimerList;
 
+        #endregion
+
+        #region コンストラクタ
         /// <summary>
         /// コンストラクタ
         /// </summary>
@@ -39,7 +40,9 @@ namespace ntsol.Tools.TwitterBotMngService
         {
             InitializeComponent();
         }
+        #endregion
 
+        #region メソッド
         /// <summary>
         /// サービスの開始処理。
         /// </summary>
@@ -56,12 +59,12 @@ namespace ntsol.Tools.TwitterBotMngService
         /// <remarks><para>タイマーのリソースを解放する。</para></remarks>
         protected override void OnStop()
         {
-            foreach(Timer randomTimer in randomTimerDic.Values)
+            foreach(Timer randomTimer in randomTimerList)
             {
                 randomTimer.Dispose();
             }
 
-            foreach(Timer replyTimer in replyTimerDic.Values)
+            foreach(Timer replyTimer in replyTimerList)
             {
                 replyTimer.Dispose();
             }
@@ -74,13 +77,20 @@ namespace ntsol.Tools.TwitterBotMngService
         private void Initialize()
         {
             // メンバ変数の初期化
-            botDic = new Dictionary<string, TwitterBot>();
-            randomTimerDic = new Dictionary<string, Timer>();
-            replyTimerDic = new Dictionary<string, Timer>();
+            botList = new List<TwitterBot>();
+            randomTimerList = new List<Timer>();
+            replyTimerList = new List<Timer>();
+
+            /* 
+            サービスの場合はカレントディレクトリがプログラムの配置場所と異なる。
+            設定ファイルをカレントパスで指定できるようにプログラム配置場所を
+            カレントディレクトリに設定する。
+            */
+                string currPath = 
+                Directory.GetParent(System.Reflection.Assembly.GetEntryAssembly().Location).ToString();
 
             // 設定ファイルからbot情報一覧を抽出
             TwitterBotInfoList xmlData = new TwitterBotInfoList();
-            string currPath = Directory.GetParent(System.Reflection.Assembly.GetEntryAssembly().Location).ToString();
             System.Environment.CurrentDirectory = currPath;
             XmlReader.XmlReader.GetInstance.Read(@"Setting\TwitterBotSetting.xml", ref xmlData);
 
@@ -96,7 +106,7 @@ namespace ntsol.Tools.TwitterBotMngService
                         twitterBot.AccessTokenSecret,
                         Int32.Parse(twitterBot.RandomTimer),
                         Int32.Parse(twitterBot.ReplyTimer));
-                    botDic.Add(twitterBot.BotName, bot);
+                    botList.Add(bot);
 
                     // ランダムポストのタイマー生成
                     Timer randomTimer = new Timer();
@@ -104,7 +114,7 @@ namespace ntsol.Tools.TwitterBotMngService
                     randomTimer.Enabled = true;
                     randomTimer.AutoReset = true;
                     randomTimer.Interval = bot.RandomTimer * 1000 * 60;
-                    randomTimerDic.Add(bot.BotName, randomTimer);
+                    randomTimerList.Add(randomTimer);
 
                     // リプライタイマー生成
                     Timer replyTimer = new Timer();
@@ -112,7 +122,7 @@ namespace ntsol.Tools.TwitterBotMngService
                     replyTimer.Enabled = true;
                     replyTimer.AutoReset = true;
                     replyTimer.Interval = bot.ReplyTimer * 1000 * 60;
-                    replyTimerDic.Add(bot.BotName, replyTimer);
+                    replyTimerList.Add(replyTimer);
 
                 }
             }
@@ -137,7 +147,7 @@ namespace ntsol.Tools.TwitterBotMngService
                 bool hitflg = false;
                 
                 // タイマーオブジェクトからどのbotかを判断する。
-                foreach(Timer timer in randomTimerDic.Values)
+                foreach(Timer timer in randomTimerList)
                 {
                     if((Timer)sender == timer)
                     {
@@ -150,9 +160,7 @@ namespace ntsol.Tools.TwitterBotMngService
                 // ランダムポスト
                 if (hitflg)
                 {
-                    TwitterBot[] botArray = new TwitterBot[botDic.Values.Count];
-                    botDic.Values.CopyTo(botArray, 0);
-                    botArray[index].RandomPost();
+                    botList[index].RandomPost();
                 }
             }
             catch
@@ -174,7 +182,7 @@ namespace ntsol.Tools.TwitterBotMngService
                 bool hitflg = false;
 
                 // タイマーオブジェクトからどのbotかを判断する。
-                foreach (Timer timer in replyTimerDic.Values)
+                foreach (Timer timer in replyTimerList)
                 {
                     if ((Timer)sender == timer)
                     {
@@ -187,18 +195,17 @@ namespace ntsol.Tools.TwitterBotMngService
                 if (hitflg)
                 {
                     // リプライとTLリプライを実行
-                    TwitterBot[] botArray = new TwitterBot[botDic.Values.Count];
-                    botDic.Values.CopyTo(botArray, 0);
-                    botArray[index].ReplyPost();
-                    botArray[index].TLReplyPost();
+                    botList[index].ReplyPost();
+                    botList[index].TLReplyPost();
 
                     // フォロバも実行
-                    botArray[index].FollowedBack();
+                    botList[index].FollowedBack();
                 }
             }
             catch
             {
             }
         }
+        #endregion
     }
 }
