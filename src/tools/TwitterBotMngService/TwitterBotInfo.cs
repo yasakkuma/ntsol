@@ -10,6 +10,10 @@ namespace ntsol.Tools.TwitterBotMngService
     /// </summary>
     public class TwitterBotInfo
     {
+        #region プロパティ
+        /// <summary>
+        /// ボット名称
+        /// </summary>
         [XmlAttribute]
         public string BotName
         {
@@ -17,6 +21,9 @@ namespace ntsol.Tools.TwitterBotMngService
             set;
         }
 
+        /// <summary>
+        /// コンシューマキー
+        /// </summary>
         [XmlElement]
         public string ConsumerKey
         {
@@ -24,6 +31,9 @@ namespace ntsol.Tools.TwitterBotMngService
             set;
         }
 
+        /// <summary>
+        /// コンシューマシークレット
+        /// </summary>
         [XmlElement]
         public string ConsumerSecret
         {
@@ -31,6 +41,9 @@ namespace ntsol.Tools.TwitterBotMngService
             set;
         }
 
+        /// <summary>
+        /// アクセストークン
+        /// </summary>
         [XmlElement]
         public string AccessToken
         {
@@ -38,6 +51,9 @@ namespace ntsol.Tools.TwitterBotMngService
             set;
         }
 
+        /// <summary>
+        /// アクセストークンシークレット
+        /// </summary>
         [XmlElement]
         public string AccessTokenSecret
         {
@@ -45,6 +61,9 @@ namespace ntsol.Tools.TwitterBotMngService
             set;
         }
 
+        /// <summary>
+        /// ランダムツイートを制御するタイマー
+        /// </summary>
         [XmlElement]
         public string RandomTimer
         {
@@ -52,11 +71,15 @@ namespace ntsol.Tools.TwitterBotMngService
             set;
         }
 
+        /// <summary>
+        /// リプライツイートを制御するタイマー
+        /// </summary>
         [XmlElement]
         public string ReplyTimer
         {
             get;
             set;
         }
+        #endregion
     }
 }

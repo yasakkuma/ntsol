@@ -13,6 +13,7 @@ namespace ntsol.Tools.TwitterBotLib
     /// </summary>
     public abstract class BaseTwitterBot
     {
+        #region メンバ変数
         /// <summary>
         /// リトライ回数
         /// </summary>
@@ -53,6 +54,9 @@ namespace ntsol.Tools.TwitterBotLib
         /// </summary>
         internal const string settingDir = @"Setting\";
 
+        #endregion
+
+        #region プロパティ
         /// <summary>
         /// ボット名称
         /// </summary>
@@ -115,7 +119,9 @@ namespace ntsol.Tools.TwitterBotLib
             get;
             private set;
         }
+        #endregion
 
+        #region コンストラクタ
         /// <summary>
         /// コンストラクタ。
         /// </summary>
@@ -130,7 +136,9 @@ namespace ntsol.Tools.TwitterBotLib
             RandomTimer = 0;
             ReplyTimer = 0;
         }
+        #endregion
 
+        #region メソッド
         /// <summary>
         /// Botの生成処理を行う。
         /// </summary>
@@ -268,5 +276,6 @@ namespace ntsol.Tools.TwitterBotLib
         {
             token.Account.UpdateProfile(newName);
         }
+        #endregion
     }
 }

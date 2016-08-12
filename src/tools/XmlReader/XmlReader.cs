@@ -16,9 +16,13 @@ namespace ntsol.Tools.XmlReader
     /// </summary>
     public class XmlReader
     {
+        #region メンバ変数
         ///<value>クラスインスタンス</value>
         private static XmlReader instance = null;
 
+        #endregion
+
+        #region プロパティ
         /// <summary>
         /// インスタンスを取得するプロパティ。
         /// </summary>
@@ -35,7 +39,9 @@ namespace ntsol.Tools.XmlReader
                 return instance;
             }
         }
+        #endregion
 
+        #region コンストラクタ
         /// <summary>
         /// XmlReaderクラスのコンストラクタ。
         /// </summary>
@@ -43,7 +49,9 @@ namespace ntsol.Tools.XmlReader
         private XmlReader()
         {
         }
+        #endregion
 
+        #region メソッド
         /// <summary>
         /// XMLファイル読み込みメソッド
         /// </summary>
@@ -76,6 +84,7 @@ namespace ntsol.Tools.XmlReader
             {
                 throw new InvalidOperationException("データクラスの格納に失敗しました。");
             }
-        } 
+        }
+        #endregion
     }
 }

@@ -12,7 +12,13 @@ namespace ntsol.Tools.TwitterBotMngService
     [XmlRoot("TwitterBotInfoList")]
     public class TwitterBotInfoList
     {
+        #region プロパティ
         [XmlElement("TwitterBotInfo")]
-        public List<TwitterBotInfo> TwitterBotList { get; set; }
+        public List<TwitterBotInfo> TwitterBotList
+        {
+            get;
+            set;
+        }
+        #endregion
     }
 }

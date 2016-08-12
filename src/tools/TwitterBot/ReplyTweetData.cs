@@ -15,6 +15,7 @@ namespace ntsol.Tools.TwitterBotLib
     /// <remarks>リプライするメッセージとどのリプライに対する返信かを保持するクラス</remarks>
     public class ReplyTweetData
     {
+        #region プロパティ
         /// <summary>
         /// リプライメッセージ
         /// </summary>
@@ -32,5 +33,6 @@ namespace ntsol.Tools.TwitterBotLib
             get;
             set;
         }
+        #endregion
     }
 }

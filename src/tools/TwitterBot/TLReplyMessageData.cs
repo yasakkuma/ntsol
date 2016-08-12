@@ -14,6 +14,7 @@ namespace ntsol.Tools.TwitterBotLib
     /// </summary>
     public class TLReplyMessageData
     {
+        #region プロパティ
         /// <summary>
         /// タイムラインリプライトリガー
         /// </summary>
@@ -33,5 +34,6 @@ namespace ntsol.Tools.TwitterBotLib
             get;
             set;
         }
+        #endregion
     }
 }

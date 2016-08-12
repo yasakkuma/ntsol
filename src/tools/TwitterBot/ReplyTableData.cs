@@ -15,6 +15,7 @@ namespace ntsol.Tools.TwitterBotLib
     [XmlRoot("ReplyTable")]
     public class ReplyTableData
     {
+        #region プロパティ
         /// <summary>
         /// リプライメッセージリスト
         /// </summary>
@@ -34,5 +35,6 @@ namespace ntsol.Tools.TwitterBotLib
             get;
             set;
         }
+        #endregion
     }
 }
