@@ -15,6 +15,7 @@ namespace ntsol.Tools.TwitterBotLib
     /// </summary>
     public class TwitterBot : BaseTwitterBot
     {
+        #region メソッド
         /// <summary>
         /// ランダムツイートする。
         /// </summary>
@@ -237,5 +238,6 @@ namespace ntsol.Tools.TwitterBotLib
                 writer.WriteLine(lastReplyId);
             }
         }
+        #endregion
     }
 }
