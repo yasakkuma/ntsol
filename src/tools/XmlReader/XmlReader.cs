@@ -18,7 +18,7 @@ namespace ntsol.Tools.XmlReader
     {
         #region メンバ変数
         ///<value>クラスインスタンス</value>
-        private static XmlReader instance = null;
+        private static XmlReader instance = new XmlReader();
 
         #endregion
 
@@ -30,12 +30,6 @@ namespace ntsol.Tools.XmlReader
         {
             get
             {
-                // シングルトンでインスタンス生成
-                if (instance == null)
-                {
-                    instance = new XmlReader();
-                }
-
                 return instance;
             }
         }
@@ -74,7 +68,7 @@ namespace ntsol.Tools.XmlReader
             try
             {
                 // XMLファイル読み込み
-                using (FileStream fileStream = new FileStream(filePath, FileMode.Open))
+                using (FileStream fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
                 {
                     // デシリアライズ
                     XmlSerializer serializer = new XmlSerializer(xmlData.GetType());
